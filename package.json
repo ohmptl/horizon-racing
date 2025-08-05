@@ -1,0 +1,98 @@
+{
+  "name": "horizon-racing",
+  "version": "1.0.0",
+  "description": "A comprehensive web-based racing game inspired by Forza Horizon 5",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve . -l 8080",
+    "dev": "npx serve . -l 8080 --reload",
+    "build": "echo 'No build process required for vanilla JavaScript'",
+    "test": "echo 'No tests configured'"
+  },
+  "keywords": [
+    "racing",
+    "game",
+    "html5",
+    "canvas",
+    "javascript",
+    "multiplayer",
+    "forza",
+    "cars",
+    "web-game"
+  ],
+  "author": "Game Developer",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/horizon-racing.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/horizon-racing/issues"
+  },
+  "homepage": "https://github.com/yourusername/horizon-racing#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "browserslist": [
+    "last 2 Chrome versions",
+    "last 2 Firefox versions",
+    "last 2 Safari versions",
+    "last 2 Edge versions"
+  ],
+  "devDependencies": {
+    "serve": "^14.0.0"
+  },
+  "files": [
+    "index.html",
+    "styles.css",
+    "js/*.js",
+    "README.md"
+  ],
+  "gameFeatures": {
+    "cars": 6,
+    "tracks": 5,
+    "gameModes": [
+      "Single Race",
+      "Championship",
+      "Time Attack",
+      "Drift Challenge",
+      "Multiplayer (Simulated)"
+    ],
+    "graphics": {
+      "engine": "HTML5 Canvas 2D",
+      "effects": [
+        "Particle System",
+        "Weather Effects",
+        "Motion Blur",
+        "Camera Shake",
+        "Lighting"
+      ]
+    },
+    "physics": {
+      "engine": "Custom JavaScript Physics",
+      "features": [
+        "Collision Detection",
+        "Drift Mechanics",
+        "Vehicle Dynamics",
+        "Environmental Forces"
+      ]
+    },
+    "controls": [
+      "WASD",
+      "Arrow Keys",
+      "Touch (Mobile)",
+      "Gamepad Support"
+    ],
+    "platforms": [
+      "Desktop Browsers",
+      "Mobile Browsers",
+      "Tablet Browsers"
+    ]
+  },
+  "performance": {
+    "targetFPS": 60,
+    "minRAM": "1GB",
+    "recommendedRAM": "2GB",
+    "browserSupport": "Modern browsers with HTML5 Canvas"
+  }
+}

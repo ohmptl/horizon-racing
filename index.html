@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horizon Racing - Web Racing Game</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/three.min.js"></script>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="screen">
+        <div class="loading-content">
+            <h1 class="game-title">HORIZON RACING</h1>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
+            <p>Loading your racing experience...</p>
+        </div>
+    </div>
+
+    <!-- Main Menu -->
+    <div id="mainMenu" class="screen hidden">
+        <div class="menu-bg"></div>
+        <div class="menu-content">
+            <h1 class="game-title">HORIZON RACING</h1>
+            <div class="menu-buttons">
+                <button class="menu-btn" onclick="showCarSelection()">RACE NOW</button>
+                <button class="menu-btn" onclick="showGarage()">GARAGE</button>
+                <button class="menu-btn" onclick="showSplitScreenSetup()">SPLIT SCREEN</button>
+                <button class="menu-btn" onclick="showSettings()">SETTINGS</button>
+                <button class="menu-btn" onclick="showMultiplayer()">MULTIPLAYER</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Car Selection -->
+    <div id="carSelection" class="screen hidden">
+        <div class="selection-header">
+            <h2>SELECT YOUR CAR</h2>
+            <button class="back-btn" onclick="showMainMenu()">← BACK</button>
+        </div>
+        <div class="car-grid" id="carGrid">
+            <!-- Cars will be populated by JavaScript -->
+        </div>
+        <div class="selection-footer">
+            <button class="start-race-btn" onclick="startRace()">START RACE</button>
+        </div>
+    </div>
+
+    <!-- Garage -->
+    <div id="garage" class="screen hidden">
+        <div class="garage-header">
+            <h2>GARAGE</h2>
+            <button class="back-btn" onclick="showMainMenu()">← BACK</button>
+        </div>
+        <div class="garage-content">
+            <div class="car-showcase" id="carShowcase">
+                <!-- Selected car details -->
+            </div>
+            <div class="customization-panel">
+                <h3>CUSTOMIZATION</h3>
+                <div class="custom-options">
+                    <div class="color-picker">
+                        <label>Car Color:</label>
+                        <input type="color" id="carColor" value="#ff0000" onchange="updateCarColor(this.value)">
+                    </div>
+                    <div class="upgrade-section">
+                        <h4>UPGRADES</h4>
+                        <div class="upgrade-item">
+                            <label>Engine: <span id="engineLevel">Level 1</span></label>
+                            <button onclick="upgradeEngine()">UPGRADE ($500)</button>
+                        </div>
+                        <div class="upgrade-item">
+                            <label>Tires: <span id="tiresLevel">Level 1</span></label>
+                            <button onclick="upgradeTires()">UPGRADE ($300)</button>
+                        </div>
+                        <div class="upgrade-item">
+                            <label>Handling: <span id="handlingLevel">Level 1</span></label>
+                            <button onclick="upgradeHandling()">UPGRADE ($400)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="gameScreen" class="screen hidden">
+        <canvas id="gameCanvas"></canvas>
+        <div class="hud">
+            <div class="speed-meter">
+                <div class="speed-value" id="speedValue">0</div>
+                <div class="speed-unit">KM/H</div>
+                <div class="rpm-meter">
+                    <div class="rpm-needle" id="rpmNeedle"></div>
+                    <div class="rpm-labels">
+                        <span>0</span><span>2</span><span>4</span><span>6</span><span>8</span>
+                    </div>
+                </div>
+            </div>
+            <div class="race-info">
+                <div class="lap-counter">Lap: <span id="lapCount">1</span>/3</div>
+                <div class="position">Position: <span id="position">1st</span></div>
+                <div class="race-time">Time: <span id="raceTime">00:00</span></div>
+                <div class="gear-display">Gear: <span id="currentGear">1</span></div>
+            </div>
+            <div class="minimap" id="minimap"></div>
+            <div class="rearview-mirror" id="rearviewMirror"></div>
+        </div>
+        <div class="controls-help">
+            <p>WASD / Arrow Keys to drive • SPACE to brake • SHIFT for nitro</p>
+        </div>
+        
+        <!-- Split Screen Mode Toggle -->
+        <div class="splitscreen-controls hidden" id="splitscreenControls">
+            <button onclick="toggleSplitScreen()" class="splitscreen-btn">Toggle Split Screen</button>
+            <div class="player-assignments">
+                <span>P1: WASD | P2: Arrow Keys</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Multiplayer Lobby -->
+    <div id="multiplayerLobby" class="screen hidden">
+        <div class="lobby-header">
+            <h2>MULTIPLAYER LOBBY</h2>
+            <button class="back-btn" onclick="showMainMenu()">← BACK</button>
+        </div>
+        <div class="lobby-content">
+            <div class="room-list">
+                <h3>AVAILABLE ROOMS</h3>
+                <div class="room-item">
+                    <div class="room-info">
+                        <h4>Speed Circuit</h4>
+                        <p>Players: 3/8</p>
+                    </div>
+                    <button class="join-btn">JOIN</button>
+                </div>
+                <div class="room-item">
+                    <div class="room-info">
+                        <h4>Mountain Pass</h4>
+                        <p>Players: 6/8</p>
+                    </div>
+                    <button class="join-btn">JOIN</button>
+                </div>
+            </div>
+            <div class="create-room">
+                <button class="menu-btn" onclick="createRoom()">CREATE ROOM</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Split Screen Setup -->
+    <div id="splitScreenSetup" class="screen hidden">
+        <div class="splitscreen-header">
+            <h2>SPLIT SCREEN RACING</h2>
+            <button class="back-btn" onclick="showMainMenu()">← BACK</button>
+        </div>
+        <div class="splitscreen-content">
+            <div class="player-setup">
+                <div class="player-config">
+                    <h3>Player 1</h3>
+                    <div class="car-selection-mini" id="player1CarSelection">
+                        <!-- Cars will be populated by JavaScript -->
+                    </div>
+                    <div class="controls-info">
+                        <p>Controls: WASD + SHIFT (Nitro)</p>
+                    </div>
+                </div>
+                <div class="player-config">
+                    <h3>Player 2</h3>
+                    <div class="car-selection-mini" id="player2CarSelection">
+                        <!-- Cars will be populated by JavaScript -->
+                    </div>
+                    <div class="controls-info">
+                        <p>Controls: Arrow Keys + SPACE (Nitro)</p>
+                    </div>
+                </div>
+            </div>
+            <div class="track-selection">
+                <h3>Select Track</h3>
+                <div class="track-grid" id="trackGrid">
+                    <!-- Tracks will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+        <div class="splitscreen-footer">
+            <button class="start-race-btn" onclick="startSplitScreenRace()">START SPLIT SCREEN RACE</button>
+        </div>
+    </div>
+
+    <!-- Settings -->
+    <div id="settings" class="screen hidden">
+        <div class="settings-header">
+            <h2>SETTINGS</h2>
+            <button class="back-btn" onclick="showMainMenu()">← BACK</button>
+        </div>
+        <div class="settings-content">
+            <div class="setting-item">
+                <label>Master Volume</label>
+                <input type="range" id="masterVolume" min="0" max="100" value="50">
+            </div>
+            <div class="setting-item">
+                <label>Graphics Quality</label>
+                <select id="graphicsQuality">
+                    <option value="low">Low</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="high">High</option>
+                    <option value="ultra">Ultra</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <label>Control Scheme</label>
+                <select id="controlScheme">
+                    <option value="wasd" selected>WASD</option>
+                    <option value="arrows">Arrow Keys</option>
+                    <option value="gamepad">Gamepad</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Race Results -->
+    <div id="raceResults" class="screen hidden">
+        <div class="results-content">
+            <h2>RACE RESULTS</h2>
+            <div class="final-position">
+                <span class="position-text">FINAL POSITION</span>
+                <span class="position-number" id="finalPosition">1st</span>
+            </div>
+            <div class="race-stats">
+                <div class="stat">
+                    <label>Best Lap:</label>
+                    <span id="bestLap">01:23.45</span>
+                </div>
+                <div class="stat">
+                    <label>Total Time:</label>
+                    <span id="totalTime">04:56.78</span>
+                </div>
+                <div class="stat">
+                    <label>Credits Earned:</label>
+                    <span id="creditsEarned">$1,500</span>
+                </div>
+            </div>
+            <div class="results-buttons">
+                <button class="menu-btn" onclick="showMainMenu()">MAIN MENU</button>
+                <button class="menu-btn" onclick="raceAgain()">RACE AGAIN</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/cars.js"></script>
+    <script src="js/physics.js"></script>
+    <script src="js/graphics.js"></script>
+    <script src="js/graphics3d.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/multiplayer.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>

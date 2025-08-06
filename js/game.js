@@ -46,9 +46,9 @@ class HorizonRacing {
                 id: 1,
                 name: 'Player 1',
                 car: null,
-                position: new THREE.Vector3(30, 1, 0),
-                rotation: new THREE.Euler(0, Math.PI / 2, 0),
-                velocity: new THREE.Vector3(0, 0, 0),
+                position: null, // Will be initialized when THREE.js loads
+                rotation: null, // Will be initialized when THREE.js loads
+                velocity: null, // Will be initialized when THREE.js loads
                 speed: 0,
                 rpm: 800,
                 gear: 1,
@@ -241,15 +241,43 @@ class HorizonRacing {
             console.error('Failed to initialize 3D graphics. Falling back to 2D mode.');
             this.ctx = this.canvas.getContext('2d');
             this.resizeCanvas();
+            this.resetRaceState(); // Use 2D race state for fallback
+        } else {
+            // 3D mode - set up 3D race state
+            this.reset3DRaceState();
         }
         
-        this.resetRaceState();
         this.setup3DScene();
         this.startGameLoop();
     }
     
+    reset3DRaceState() {
+        this.gameState.currentRace = {
+            position: 1,
+            lap: 1,
+            totalLaps: 3,
+            time: 0,
+            speed: 0,
+            rpm: 800,
+            gear: 1,
+            isRacing: true
+        };
+    }
+    
     setup3DScene() {
         if (!this.graphics3D || !this.graphics3D.scene) return;
+        
+        // Initialize 3D objects for players now that THREE.js is available
+        this.players.forEach((player, index) => {
+            if (!player.position) {
+                // Position cars at the starting line on the track (radius 30)
+                const angle = (index * Math.PI / 4); // Spread players around start
+                player.position = new THREE.Vector3(30 * Math.cos(angle), 1, 30 * Math.sin(angle));
+                player.rotation = new THREE.Euler(0, angle + Math.PI / 2, 0);
+                player.velocity = new THREE.Vector3(0, 0, 0);
+                console.log(`Player ${index} positioned at:`, player.position, 'rotation:', player.rotation);
+            }
+        });
         
         // Create the racing track
         const currentTrackData = gameData.tracks[0]; // Default track
@@ -263,25 +291,39 @@ class HorizonRacing {
     }
     
     createPlayerCars3D() {
+        console.log('Creating player cars in 3D...');
         this.playerCars3D = [];
         
         this.players.forEach((player, index) => {
-            if (this.selectedCar || gameData.cars[0]) {
-                const carData = this.selectedCar || gameData.cars[0];
+            // Get car data from index or default to first car
+            const carIndex = this.selectedCar !== null ? this.selectedCar : 0;
+            const carData = gameData.cars[carIndex];
+            
+            console.log(`Creating car for player ${index}, carIndex: ${carIndex}, carData:`, carData);
+            
+            if (carData) {
                 const car3D = this.graphics3D.createCar(carData);
                 
                 // Position the car
                 car3D.position.copy(player.position);
                 car3D.rotation.copy(player.rotation);
                 
+                console.log(`Car positioned at:`, car3D.position, 'rotation:', car3D.rotation);
+                
                 // Add to scene and store reference
                 this.graphics3D.scene.add(car3D);
                 this.playerCars3D.push(car3D);
                 
+                console.log('Car added to scene, total scene children:', this.graphics3D.scene.children.length);
+                
                 // Update player reference
                 player.car = car3D;
+            } else {
+                console.error(`No car data found for index ${carIndex}`);
             }
         });
+        
+        console.log('Finished creating player cars, total cars:', this.playerCars3D.length);
     }
 
     resizeCanvas() {
@@ -391,7 +433,10 @@ class HorizonRacing {
         if (!this.players[playerIndex] || !this.players[playerIndex].car) return;
         
         const player = this.players[playerIndex];
-        const carData = this.selectedCar || gameData.cars[player.selectedCar || 0];
+        const carIndex = this.selectedCar !== null ? this.selectedCar : (player.selectedCar || 0);
+        const carData = gameData.cars[carIndex];
+        
+        if (!carData) return; // Exit if no car data found
         
         // Car physics constants
         const acceleration = carData.stats.acceleration * 20;
@@ -516,8 +561,13 @@ class HorizonRacing {
 
     renderGame3D(deltaTime) {
         if (this.graphics3D) {
+            // Add debug frame counter
+            if (!this.gameState.debugFrame) this.gameState.debugFrame = 0;
+            this.gameState.debugFrame++;
+            
             this.graphics3D.render(this.gameState, deltaTime);
         } else {
+            console.warn('Graphics3D not available, falling back to 2D rendering');
             // Fallback to 2D rendering
             this.renderGame();
         }
@@ -1065,9 +1115,9 @@ function selectCarForPlayer(playerId, carIndex) {
                     id: 2,
                     name: 'Player 2',
                     car: null,
-                    position: new THREE.Vector3(30, 1, -3),
-                    rotation: new THREE.Euler(0, Math.PI / 2, 0),
-                    velocity: new THREE.Vector3(0, 0, 0),
+                    position: typeof THREE !== 'undefined' ? new THREE.Vector3(30, 1, -3) : null,
+                    rotation: typeof THREE !== 'undefined' ? new THREE.Euler(0, Math.PI / 2, 0) : null,
+                    velocity: typeof THREE !== 'undefined' ? new THREE.Vector3(0, 0, 0) : null,
                     speed: 0,
                     rpm: 800,
                     gear: 1,
@@ -1120,9 +1170,9 @@ function enableSplitScreen() {
             id: 2,
             name: 'Player 2',
             car: null,
-            position: new THREE.Vector3(30, 1, -3),
-            rotation: new THREE.Euler(0, Math.PI / 2, 0),
-            velocity: new THREE.Vector3(0, 0, 0),
+            position: typeof THREE !== 'undefined' ? new THREE.Vector3(30, 1, -3) : null,
+            rotation: typeof THREE !== 'undefined' ? new THREE.Euler(0, Math.PI / 2, 0) : null,
+            velocity: typeof THREE !== 'undefined' ? new THREE.Vector3(0, 0, 0) : null,
             speed: 0,
             rpm: 800,
             gear: 1,

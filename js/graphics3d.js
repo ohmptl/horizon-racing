@@ -42,12 +42,25 @@ class Graphics3D {
             return false;
         }
         
-        this.setupScene();
-        this.setupRenderer();
-        this.setupLighting();
-        this.setupControls();
-        
-        return true;
+        try {
+            this.setupScene();
+            this.setupRenderer();
+            this.setupLighting();
+            this.setupControls();
+            
+            // Add test geometry to verify rendering
+            this.addTestGeometry();
+            
+            console.log('3D Graphics engine initialized successfully');
+            console.log('Scene:', this.scene);
+            console.log('Camera:', this.camera);
+            console.log('Renderer:', this.renderer);
+            
+            return true;
+        } catch (error) {
+            console.error('Failed to initialize 3D graphics:', error);
+            return false;
+        }
     }
     
     setupScene() {
@@ -55,23 +68,51 @@ class Graphics3D {
         this.scene.background = new THREE.Color(0x87CEEB);
         this.scene.fog = new THREE.Fog(0x87CEEB, 50, 300);
         
-        // Camera setup
+        // Camera setup - position it to see the track clearly
         this.camera = new THREE.PerspectiveCamera(
             75, 
             window.innerWidth / window.innerHeight, 
             0.1, 
             1000
         );
-        this.camera.position.set(0, 15, 30);
+        // Start with a high overview position to see everything
+        this.camera.position.set(0, 50, 50);
+        this.camera.lookAt(0, 0, 0); // Look at the center where cars and track are
+        
+        console.log('3D Scene setup complete, camera at:', this.camera.position);
     }
     
+    addTestGeometry() {
+        console.log('Adding test geometry for debugging...');
+        
+        // Add a large colored cube at origin
+        const cubeGeometry = new THREE.BoxGeometry(10, 10, 10);
+        const cubeMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 });
+        const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+        cube.position.set(0, 5, 0);
+        this.scene.add(cube);
+        
+        // Add a green ground plane
+        const planeGeometry = new THREE.PlaneGeometry(100, 100);
+        const planeMaterial = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
+        const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+        plane.rotation.x = -Math.PI / 2;
+        plane.position.y = 0;
+        this.scene.add(plane);
+        
+        console.log('Test geometry added, scene now has', this.scene.children.length, 'objects');
+    }
+
     setupRenderer() {
+        console.log('Setting up WebGL renderer...');
         this.renderer = new THREE.WebGLRenderer({ 
             canvas: this.canvas, 
             antialias: this.quality.antialiasing 
         });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(window.devicePixelRatio);
+        
+        console.log('Renderer created, canvas size:', window.innerWidth, 'x', window.innerHeight);
         
         if (this.quality.shadows) {
             this.renderer.shadowMap.enabled = true;
@@ -81,6 +122,8 @@ class Graphics3D {
         this.renderer.outputEncoding = THREE.sRGBEncoding;
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
         this.renderer.toneMappingExposure = 1.0;
+        
+        console.log('Renderer setup complete, shadows enabled:', this.quality.shadows);
     }
     
     setupLighting() {
@@ -127,6 +170,8 @@ class Graphics3D {
         
         this.track = new THREE.Group();
         
+        console.log('Creating track with data:', trackData);
+        
         // Create different track types based on track data
         switch (trackData.type || 'circuit') {
             case 'circuit':
@@ -146,6 +191,7 @@ class Graphics3D {
         }
         
         this.scene.add(this.track);
+        console.log('Track added to scene, track children:', this.track.children.length);
     }
     
     createCircuitTrack(trackData) {
@@ -408,7 +454,136 @@ class Graphics3D {
         this.track.add(tower);
     }
     
+    createStreetElements() {
+        // Add street lights
+        for (let i = 0; i < 8; i++) {
+            const poleGeometry = new THREE.CylinderGeometry(0.1, 0.1, 6);
+            const poleMaterial = new THREE.MeshLambertMaterial({ color: 0x333333 });
+            const pole = new THREE.Mesh(poleGeometry, poleMaterial);
+            
+            const lightGeometry = new THREE.SphereGeometry(0.5, 8, 8);
+            const lightMaterial = new THREE.MeshBasicMaterial({ color: 0xffffaa });
+            const light = new THREE.Mesh(lightGeometry, lightMaterial);
+            light.position.y = 3;
+            
+            const streetLight = new THREE.Group();
+            streetLight.add(pole);
+            streetLight.add(light);
+            
+            streetLight.position.set(
+                Math.random() * 60 - 30,
+                3,
+                Math.random() * 60 - 30
+            );
+            
+            this.track.add(streetLight);
+        }
+        
+        // Add building outlines
+        for (let i = 0; i < 12; i++) {
+            const buildingGeometry = new THREE.BoxGeometry(
+                5 + Math.random() * 10,
+                8 + Math.random() * 15,
+                5 + Math.random() * 8
+            );
+            const buildingMaterial = new THREE.MeshLambertMaterial({ 
+                color: new THREE.Color().setHSL(0.6, 0.2, 0.3 + Math.random() * 0.4)
+            });
+            const building = new THREE.Mesh(buildingGeometry, buildingMaterial);
+            
+            building.position.set(
+                (Math.random() - 0.5) * 100,
+                building.geometry.parameters.height / 2,
+                (Math.random() - 0.5) * 100
+            );
+            building.castShadow = true;
+            building.receiveShadow = true;
+            
+            this.track.add(building);
+        }
+    }
+    
+    createNaturalElements() {
+        // Add rocks
+        for (let i = 0; i < 15; i++) {
+            const rockGeometry = new THREE.DodecahedronGeometry(1 + Math.random() * 2);
+            const rockMaterial = new THREE.MeshLambertMaterial({ color: 0x888888 });
+            const rock = new THREE.Mesh(rockGeometry, rockMaterial);
+            
+            rock.position.set(
+                (Math.random() - 0.5) * 80,
+                rock.geometry.parameters.radius / 2,
+                (Math.random() - 0.5) * 80
+            );
+            rock.castShadow = true;
+            rock.receiveShadow = true;
+            
+            this.track.add(rock);
+        }
+        
+        // Add bushes
+        for (let i = 0; i < 20; i++) {
+            const bushGeometry = new THREE.SphereGeometry(1 + Math.random(), 6, 6);
+            const bushMaterial = new THREE.MeshLambertMaterial({ color: 0x228B22 });
+            const bush = new THREE.Mesh(bushGeometry, bushMaterial);
+            
+            bush.position.set(
+                (Math.random() - 0.5) * 90,
+                bush.geometry.parameters.radius / 2,
+                (Math.random() - 0.5) * 90
+            );
+            bush.castShadow = true;
+            
+            this.track.add(bush);
+        }
+    }
+    
+    createDriftZones() {
+        // Create drift zone markings
+        const zones = [
+            { x: -20, z: -20, width: 15, height: 15 },
+            { x: 20, z: 20, width: 12, height: 12 },
+            { x: -25, z: 25, width: 10, height: 18 }
+        ];
+        
+        zones.forEach(zone => {
+            const zoneGeometry = new THREE.PlaneGeometry(zone.width, zone.height);
+            const zoneMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xff6600,
+                transparent: true,
+                opacity: 0.3
+            });
+            const driftZone = new THREE.Mesh(zoneGeometry, zoneMaterial);
+            driftZone.rotation.x = -Math.PI / 2;
+            driftZone.position.set(zone.x, 0.05, zone.z);
+            
+            this.track.add(driftZone);
+        });
+    }
+    
+    createTireBarriers() {
+        // Create tire barriers around the drift track
+        for (let i = 0; i < 24; i++) {
+            const tireGeometry = new THREE.TorusGeometry(1, 0.3, 8, 16);
+            const tireMaterial = new THREE.MeshLambertMaterial({ color: 0x111111 });
+            const tire = new THREE.Mesh(tireGeometry, tireMaterial);
+            
+            const angle = (i / 24) * Math.PI * 2;
+            tire.position.set(
+                Math.cos(angle) * 35,
+                0.3,
+                Math.sin(angle) * 35
+            );
+            tire.rotation.x = Math.PI / 2;
+            tire.castShadow = true;
+            
+            this.track.add(tire);
+        }
+    }
+    
     createCar(carData) {
+        console.log('Creating car with data:', carData);
+        
         const carGroup = new THREE.Group();
         
         // Car body
@@ -485,6 +660,7 @@ class Graphics3D {
         carGroup.add(exhaust);
         carGroup.exhaust = exhaust;
         
+        console.log('Car created successfully, children:', carGroup.children.length);
         return carGroup;
     }
     
@@ -553,7 +729,22 @@ class Graphics3D {
     }
     
     render(gameState, deltaTime) {
-        if (!this.scene || !this.camera || !this.renderer) return;
+        if (!this.scene || !this.camera || !this.renderer) {
+            console.warn('3D render called but components not ready:', {
+                scene: !!this.scene,
+                camera: !!this.camera,
+                renderer: !!this.renderer
+            });
+            return;
+        }
+        
+        // Log scene content for debugging
+        if (gameState && gameState.debugFrame % 60 === 0) { // Every 60 frames
+            console.log('3D Scene children:', this.scene.children.length);
+            console.log('Cars in scene:', this.cars.length);
+            console.log('Track in scene:', !!this.track);
+            console.log('Camera position:', this.camera.position);
+        }
         
         // Update animations
         this.updateAnimations(gameState, deltaTime);
@@ -641,4 +832,5 @@ class Graphics3D {
     }
 }
 
-export { Graphics3D };
+// Make Graphics3D available globally
+window.Graphics3D = Graphics3D;
